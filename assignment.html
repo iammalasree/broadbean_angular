@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style type="text/css">
+        .header {
+            font-size: 1.5rem;
+            border-bottom: 1px dashed;
+            padding: 2% 0 1% 2%;
+        }
+        
+        .content {
+            padding: 10px 0 0 2%;
+        }
+        
+        .score {
+            border-left: 1px solid;
+            padding-left: 10px;
+        }
+        
+        .title {
+            margin-right: 20px;
+            width: 28%;
+            display: inline-block;
+        }
+    </style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.7/angular.min.js"></script>
+</head>
+
+<body ng-app="myApp">
+    <div ng-controller="MainController">
+        <div ng-repeat="eachItem in data">
+            <div class="header">{{eachItem[0].score}}</div>
+            <div class="content" ng-repeat="eachObj in eachItem | orderBy:'title'">
+                <span class="title">{{eachObj.title}}</span><span class="score">{{eachObj.metacriticScore}}</span></div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        var app = angular.module('myApp', []);
+        app.controller('MainController', function($scope, $http) {
+            var indexedTeams = [];
+            $http.get('http://www.cheapshark.com/api/1.0/deals').success(function(response) {
+                response.sort(function(a, b) {
+                    return b.metacriticScore - a.metacriticScore;
+                });
+                var result = response;
+                angular.forEach(result, function(eachObj) {
+                    eachObj.metacriticScore *= 1;
+                    eachObj['score'] = (Math.ceil(eachObj.metacriticScore / 10) * 10);
+                });
+
+                var groups2 = [];
+                result.forEach(function(item) {
+                    var list = groups2[item.score];
+
+                    if (list) {
+                        list.push(item);
+                    } else {
+                        groups2[item.score] = [item];
+                    }
+                });
+
+                function cleanArray(actual) {
+                    var newArray = [];
+                    for (var i = 0; i < actual.length; i++) {
+                        if (actual[i]) {
+                            newArray.push(actual[i]);
+                        }
+                    }
+                    return newArray;
+                }
+
+                $scope.data = cleanArray(groups2).reverse();
+            });
+        });
+    </script>
+</body>
+
+</html>
